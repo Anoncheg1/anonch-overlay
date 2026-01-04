@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>Anoncheg1</email>
+    <name>Anoncheg1</name>
+  </maintainer>
+  <upstream>
+    <remote-id type="github">pkubowicz/opendetex</remote-id>
+    <bugs-to>https://github.com/pkubowicz/opendetex/issues</bugs-to>
+    <doc>
+      <html>https://github.com/pkubowicz/opendetex</html>
+    </doc>
+  </upstream>
+  <longdescription lang="en">
+    Detex is a program for removing TeX and LaTeX markup from text sources. Includes the detex and delatex binaries.
+  </longdescription>
+  <use>
+    <flag name="test">
+      Enable upstream build-time tests (requires Perl and optional Valgrind).
+    </flag>
+  </use>
+</pkgmetadata>
