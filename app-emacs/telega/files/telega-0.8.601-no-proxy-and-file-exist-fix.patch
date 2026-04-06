@@ -1,0 +1,60 @@
+diff --git a/telega-media.el b/telega-media.el
+index 848bce4..66f0548 100644
+--- a/telega-media.el
++++ b/telega-media.el
+@@ -248,7 +248,7 @@ If SYNC-P is specified, wait for file being canceled to download."
+               (let ((nfile (telega--getFile file-id)))
+                 (telega-file--ensure nfile)
+                 (funcall update-callback nfile)))
+-          
++
+           (funcall update-callback dfile 'chunk-done)
+           (when other-parts
+             (telega-file--download-incrementally dfile other-parts
+@@ -581,6 +581,7 @@ CHEIGHT is the height in chars (default=1)."
+ (defun telega-photo-preview--create-image-one-line (photo &optional for-chat)
+   "Return one line preview image for the PHOTO.
+ Return nil if preview image is unavailable."
++  (condition-case err
+   (when (and telega-use-images
+              (telega-chat-match-p for-chat telega-use-one-line-preview-for))
+     (let* ((create-svg-fun (or telega-preview--create-svg-one-line-function
+@@ -610,7 +611,8 @@ Return nil if preview image is unavailable."
+                                   (plist-get minithumb :width)
+                                   (plist-get minithumb :height)))))))
+       (plist-put photo :telega-preview-1 preview-new)
+-      (cdr preview-new))))
++      (cdr preview-new)))
++  (error nil)))
+ 
+ (defun telega-video-preview--create-image-one-line (video &optional for-chat)
+   "Return one line preview for the VIDEO.
+diff --git a/telega-tdlib.el b/telega-tdlib.el
+index f31d669..1861ca3 100644
+--- a/telega-tdlib.el
++++ b/telega-tdlib.el
+@@ -102,10 +102,13 @@ If SYNC-P is specified, then set option is sync manner."
+                                                      (type-of val))))
+                               :value (or val :false)))))
+ 
+-(defun telega--addProxy (proxy-spec &optional callback)
++(defun telega--addProxy (tl-proxy &optional callback)
+   "Add PROXY-SPEC to the list of proxies."
++  (declare (indent 2))
+   (telega-server--call
+-   `(:@type "addProxy" ,@proxy-spec)
++   (list :@type "addProxy"
++         :proxy tl-proxy
++         :enable (if (plist-get tl-proxy :enable) t :false))
+    (or callback #'ignore)))
+ 
+ (defun telega--enableProxy (proxy &optional callback)
+@@ -2799,7 +2802,7 @@ TO-LANGUAGE-CODE is a two-letter ISO 639-1 language code. "
+       (plist-get reply :text)
+     (list :@type "getCountryCode")
+     callback))
+-  
++
+ (defun telega--setNetworkType (tdlib-network-type &optional callback)
+   (telega-server--call
+    (list :@type "setNetworkType"
