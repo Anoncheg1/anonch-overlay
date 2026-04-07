@@ -64,7 +64,8 @@ RDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${P}-no-proxy-and-file-exist-fix.patch
+    "${FILESDIR}"/${P}-no-proxy-and-file-exist-fix.patch
+    "${FILESDIR}"/${P}-telega-0.8.601-telega-server-version.patch
 )
 
 src_prepare() {
