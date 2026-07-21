@@ -8,9 +8,8 @@
 - app-misc/kbdtimeout - Own daemon that allow to execute command (for ex. block PC) if no keys was pressed for some time.
 - app-misc/keyd - remapping keys in X11 and Wayland per applications and global.
 - app-text/opendetex - removing TeX and LaTeX
-
-Telega - Unoffical Telegram client. Include:  net-libs/tdlib, app-emacs/rainbow-identifiers, app-emacs/visual-fill-column
-
+- Telega - Unoffical Telegram client. Include:  net-libs/tdlib, app-emacs/rainbow-identifiers, app-emacs/visual-fill-column
+- OpenGothic: dev-games/zenkit
 
 
 Removed
