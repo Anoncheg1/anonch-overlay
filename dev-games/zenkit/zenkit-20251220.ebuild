@@ -5,7 +5,7 @@ EAPI=8
 
 inherit cmake flag-o-matic
 
-COMMIT="06abf63bf6a4d4b680f67976b46ea4fd8bba1848"
+COMMIT="0e3b3f67d203feb6de1888977a7c850acf7d0731"
 DESCRIPTION="C++20 parser and runtime library for Gothic game engine assets"
 HOMEPAGE="https://github.com/GothicKit/ZenKit"
 SRC_URI="https://github.com/GothicKit/ZenKit/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"

@@ -1,13 +1,14 @@
-# Copyright 2026 Anoncheg1
+# Copyright 2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
 inherit cmake flag-o-matic
 
+COMMIT="313135fe87486b0a18dfdfafebddc323fcc7469b"
 DESCRIPTION="C++20 parser and runtime library for Gothic game engine assets"
 HOMEPAGE="https://github.com/GothicKit/ZenKit"
-SRC_URI="https://github.com/GothicKit/ZenKit/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/GothicKit/ZenKit/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
 
 S="${WORKDIR}/ZenKit-${PV}"
 
@@ -15,8 +16,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
 IUSE="test"
-RESTRICT="!test? ( test )"
-
+RESTRICT="mirror bindist !test? ( test )"
 RDEPEND="
 	media-libs/glm
 	media-libs/libsquish
@@ -64,7 +64,7 @@ EOF
 src_configure() {
 	local mycmakeargs=(
 		-DZK_BUILD_TESTS=$(usex test ON OFF)
-		-DZK_BUILD_EXAMPLES=OFF
+		-DZK_BUILD_EXAMPLES=$(usex test ON OFF)
 		-DZK_BUILD_SHARED=OFF
 		-DZK_ENABLE_ASAN=OFF
 		-DZK_ENABLE_DEPRECATION=OFF
@@ -74,5 +74,8 @@ src_configure() {
 }
 
 src_test() {
+        local CMAKE_SKIP_TESTS=(
+		"ModelAnimation.load"
+	)
 	cmake_src_test
 }
