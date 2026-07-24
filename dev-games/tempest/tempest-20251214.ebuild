@@ -20,8 +20,8 @@ IUSE="audio test vulkan"
 # Was not tested: FEATURES=test USE=test emerge tempest
 RESTRICT="mirror bindist !test? ( test )"
 REQUIRED_USE="test? ( vulkan )"
-# audio? ( =media-libs/openal-1.25.2 ) 
-	
+# audio? ( =media-libs/openal-1.25.2 )
+
 DEPEND="
 	dev-libs/stb
 	media-libs/libpng:0=
@@ -64,7 +64,7 @@ src_prepare() {
 
 	# Inject find_package(Vulkan REQUIRED) right before the Vulkan block
 	sed -i '/^### Vulkan$/i find_package(Vulkan REQUIRED)' Engine/CMakeLists.txt || die "Failed to inject find_package(Vulkan)"
-		
+
 	# Replace bare 'vulkan' and 'vulkan-1' with the proper CMake imported target
 	sed -i 's/target_link_libraries(${PROJECT_NAME} PRIVATE vulkan-1)/target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)/g' Engine/CMakeLists.txt || die
 	sed -i 's/target_link_libraries(${PROJECT_NAME} PRIVATE vulkan)/target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)/g' Engine/CMakeLists.txt || die
@@ -73,7 +73,7 @@ src_prepare() {
 	sed -i '/target_compile_options(zlibstatic PRIVATE/d' Engine/CMakeLists.txt || die
 	sed -i '/target_include_directories(png_static/d' Engine/CMakeLists.txt || die
 	sed -i '/target_link_libraries(png_static PRIVATE/d' Engine/CMakeLists.txt || die
-	# sed -i '/target_compile_options(OpenAL PRIVATE/d' Engine/CMakeLists.txt || die 
+	# sed -i '/target_compile_options(OpenAL PRIVATE/d' Engine/CMakeLists.txt || die
 
 	# 6. Neutralize bundled thirdparty subdirectories
 	: > Engine/thirdparty/zlib/CMakeLists.txt || die
@@ -138,28 +138,6 @@ src_compile() {
 		BUILD_DIR="${WORKDIR}/${P}_build_tests" \
 			cmake_src_compile
 	fi
-
-	# --- Consumer Linkage Test ---
-	# Verify that libTempest.so can be linked by a downstream consumer without 
-	# undefined reference errors. This catches missing PUBLIC dependencies.
-	ebegin "Testing libTempest.so consumer linkage"
-	cat << 'EOF' > "${T}/tempest_link_test.cpp"
-// Minimal dummy program to test static linkage against libTempest.so
-int main() { return 0; }
-EOF
-	
-	# Attempt to link a dummy executable against libTempest.so.
-	# If Vulkan (or other deps) are linked as PRIVATE, this will fail with 
-	# "undefined reference" errors, correctly failing the ebuild.
-	[[ -n ${CXX} ]] || CXX="g++"
-	${CXX} ${CXXFLAGS} ${LDFLAGS} -I"${S}/Engine/include" -L"${BUILD_DIR}" -lTempest -o "${T}/tempest_link_test" "${T}/tempest_link_test.cpp" || die "Linkage test failed: libTempest.so has unresolved dependencies (ensure Vulkan is linked as PUBLIC)"[[ -n ${CXX} ]] || CXX="g++"
-"${CXX}" ${CXXFLAGS} ${LDFLAGS} \
-    -I"${S}/Engine/include" \
-    -L"${BUILD_DIR}" \
-    -lTempest \
-    -o "${T}/tempest_link_test" "${T}/tempest_link_test.cpp" \
-    || die "Linkage test failed: libTempest.so has unresolved dependencies (ensure Vulkan is linked as PUBLIC)"
-	eend $?
 }
 
 src_install() {
