@@ -9,8 +9,19 @@
 - app-misc/keyd - remapping keys in X11 and Wayland per applications and global.
 - app-text/opendetex - removing TeX and LaTeX
 - Telega - Unoffical Telegram client. Include:  net-libs/tdlib, app-emacs/rainbow-identifiers, app-emacs/visual-fill-column
-- OpenGothic: dev-games/zenkit
+- OpenGothic 2025 v1.0.3549: dev-games/zenkit, dev-games/tempest, games-engines/opengothic
 
 
 Removed
 - sci-libs/caffe2-2.4.0-r2  - disable sci-libs/kineto, +numpy -> numpy
+
+# Donate
+- BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
+
+![](https://raw.githubusercontent.com/Anoncheg1/public-share/refs/heads/main/BTC-1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25.png)
+
+- USDT (Tether TRX-TRON) address: TVoXfYMkVYLnQZV3mGZ6GvmumuBfGsZzsN
+
+![](https://raw.githubusercontent.com/Anoncheg1/public-share/refs/heads/main/USDT-TVoXfYMkVYLnQZV3mGZ6GvmumuBfGsZzsN.png)
+
+- TON (Telegram) address: UQC8rjJFCHQkfdp7KmCkTZCb5dGzLFYe2TzsiZpfsnyTFt9D

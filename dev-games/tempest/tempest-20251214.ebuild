@@ -5,7 +5,7 @@ EAPI=8
 
 inherit cmake virtualx
 
-COMMIT="0e3b3f67d203feb6de1888977a7c850acf7d0731"
+COMMIT="58477f3eb9a2208dad9f3dae31b98a4b75fcff29"
 DESCRIPTION="A modern cross-platform graphics and game engine library"
 HOMEPAGE="https://github.com/Try/Tempest"
 SRC_URI="https://github.com/Try/Tempest/archive/${COMMIT}.tar.gz -> ${P}.tar.gz"
@@ -20,8 +20,8 @@ IUSE="audio test vulkan"
 # Was not tested: FEATURES=test USE=test emerge tempest
 RESTRICT="mirror bindist !test? ( test )"
 REQUIRED_USE="test? ( vulkan )"
-
-# dev-util/spirv-cross
+# audio? ( =media-libs/openal-1.25.2 ) 
+	
 DEPEND="
 	dev-libs/stb
 	media-libs/libpng:0=
@@ -29,12 +29,12 @@ DEPEND="
 	sys-libs/zlib:=
 	x11-libs/libX11
 	x11-libs/libXcursor
-	audio? ( media-libs/openal )
-	vulkan? ( media-libs/vulkan-loader )
+	vulkan? (
+           >=media-libs/vulkan-loader-1.4.304.0[X]
+           >=dev-util/vulkan-headers-1.4.304.0
+)
 "
 RDEPEND="${DEPEND}"
-
-# Cleaned up duplicate x11-libs/libXcursor, kept required items
 BDEPEND="
 	dev-util/glslang
 	virtual/pkgconfig
@@ -47,43 +47,44 @@ BDEPEND="
 CMAKE_USE_DIR="${S}/Engine"
 
 src_prepare() {
-  cmake_src_prepare
+	cmake_src_prepare
 
-  # 1. Fix installation target directory paths for Gentoo lib/lib64 architecture
-  sed -i \
-      -e 's/LIBRARY DESTINATION lib/LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/g' \
-      -e 's/ARCHIVE DESTINATION lib/ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/g' \
-      Engine/CMakeLists.txt || die "sed failed to fix installation paths"
+	# 1. Fix installation target directory paths for Gentoo lib/lib64 architecture
+	sed -i \
+		-e 's/LIBRARY DESTINATION lib/LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/g' \
+		-e 's/ARCHIVE DESTINATION lib/ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/g' \
+		Engine/CMakeLists.txt || die "sed failed to fix installation paths"
 
-  # 2. Strip macOS hardcoded toolpaths for glslangValidator
-  sed -i 's|find_program(GLSLANGVALIDATOR glslangValidator "/opt/homebrew/bin")|find_program(GLSLANGVALIDATOR glslangValidator REQUIRED)|g' Engine/CMakeLists.txt || die
+	# 2. Strip macOS hardcoded toolpaths for glslangValidator
+	sed -i 's|find_program(GLSLANGVALIDATOR glslangValidator "/opt/homebrew/bin")|find_program(GLSLANGVALIDATOR glslangValidator REQUIRED)|g' \
+		Engine/CMakeLists.txt || die "sed failed to fix glslangValidator path"
 
-  # 3. Strip Windows-centric Vulkan SDK path logic safely
-  # sed -i '/target_link_directories(${PROJECT_NAME} PRIVATE "$ENV{VULKAN_SDK}/,/[[:space:]]*endif()/d' Engine/CMakeLists.txt || die "Failed to strip VULKAN_SDK lines"
-  # sed -i 's|target_include_directories(${PROJECT_NAME} PRIVATE "$ENV{VULKAN_SDK}/include")||g' Engine/CMakeLists.txt || die
-  sed -i '/ENV{VULKAN_SDK}/d' Engine/CMakeLists.txt || die "sed failed to clear VULKAN_SDK paths"
+	# 3. Fix Vulkan linkage for Gentoo: remove hardcoded SDK paths and use standard find_package
+	sed -i '/ENV{VULKAN_SDK}/d' Engine/CMakeLists.txt || die "sed failed to clear VULKAN_SDK paths"
 
-  # 4. Strip the broken legacy PRIVATE configuration blocks on internal libraries
-  # Fix zlib target_compile_options compilation error
-  sed -i '/target_compile_options(zlibstatic PRIVATE/d' Engine/CMakeLists.txt || die
+	# Inject find_package(Vulkan REQUIRED) right before the Vulkan block
+	sed -i '/^### Vulkan$/i find_package(Vulkan REQUIRED)' Engine/CMakeLists.txt || die "Failed to inject find_package(Vulkan)"
+		
+	# Replace bare 'vulkan' and 'vulkan-1' with the proper CMake imported target
+	sed -i 's/target_link_libraries(${PROJECT_NAME} PRIVATE vulkan-1)/target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)/g' Engine/CMakeLists.txt || die
+	sed -i 's/target_link_libraries(${PROJECT_NAME} PRIVATE vulkan)/target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)/g' Engine/CMakeLists.txt || die
 
-  # Fix png_static target_include_directories and target_link_libraries compilation errors
-  sed -i '/target_include_directories(png_static/d' Engine/CMakeLists.txt || die
-  sed -i '/target_link_libraries(png_static PRIVATE/d' Engine/CMakeLists.txt || die
+	# 5. Strip broken legacy PRIVATE configuration blocks on third-party targets
+	sed -i '/target_compile_options(zlibstatic PRIVATE/d' Engine/CMakeLists.txt || die
+	sed -i '/target_include_directories(png_static/d' Engine/CMakeLists.txt || die
+	sed -i '/target_link_libraries(png_static PRIVATE/d' Engine/CMakeLists.txt || die
+	# sed -i '/target_compile_options(OpenAL PRIVATE/d' Engine/CMakeLists.txt || die 
 
-  # Fix OpenAL target_compile_options properties errors
-  sed -i '/target_compile_options(OpenAL PRIVATE/d' Engine/CMakeLists.txt || die
+	# 6. Neutralize bundled thirdparty subdirectories
+	: > Engine/thirdparty/zlib/CMakeLists.txt || die
+	: > Engine/thirdparty/libpng/CMakeLists.txt || die
+	: > Engine/thirdparty/squish/CMakeLists.txt || die
+	# if use audio; then
+	# 	: > Engine/thirdparty/openal-soft/CMakeLists.txt || die
+	# fi
 
-  # 5. Neutralize specific thirdparty build subdirectories (excluding spirv_cross)
-  : > Engine/thirdparty/zlib/CMakeLists.txt || die
-  : > Engine/thirdparty/libpng/CMakeLists.txt || die
-  : > Engine/thirdparty/squish/CMakeLists.txt || die
-  if use audio; then
-    : > Engine/thirdparty/openal-soft/CMakeLists.txt || die
-  fi
-
-  # 6. Inject INTERFACE targets EARLY right before CMake tries to configure them
-  cat << 'EOF' > "${T}/early_mappings.cmake"
+	# 7. Inject target mappings early using system dependencies
+	cat << 'EOF' > "${T}/early_mappings.cmake"
 find_package(ZLIB REQUIRED)
 add_library(zlibstatic INTERFACE)
 target_link_libraries(zlibstatic INTERFACE ZLIB::ZLIB)
@@ -92,94 +93,96 @@ find_package(PNG REQUIRED)
 add_library(png_static INTERFACE)
 target_link_libraries(png_static INTERFACE PNG::PNG)
 
-# Fall back to direct filesystem tracking for squish using standard paths
 find_path(SQUISH_INCLUDE_DIR NAMES squish.h HINTS "${EPREFIX}/usr/include/squish" REQUIRED)
 find_library(SQUISH_LIBRARY NAMES squish HINTS "${EPREFIX}/usr/lib" "${EPREFIX}/usr/lib64" REQUIRED)
 add_library(squish-tempest INTERFACE)
 target_link_libraries(squish-tempest INTERFACE ${SQUISH_LIBRARY})
 target_include_directories(squish-tempest INTERFACE ${SQUISH_INCLUDE_DIR})
-
-if(TEMPEST_BUILD_AUDIO)
-  find_package(OpenAL REQUIRED)
-  add_library(OpenAL INTERFACE)
-  target_link_libraries(OpenAL INTERFACE OpenAL::OpenAL)
-endif()
 EOF
 
-  # Insert our mappings file right before the zlib block in the original file
-  sed -i '/### zlib/i include("'${T}/early_mappings.cmake'")' Engine/CMakeLists.txt || die "Failed to inject early mappings"
+	sed -i '/### zlib/i include("'${T}/early_mappings.cmake'")' Engine/CMakeLists.txt || die "Failed to inject early mappings"
 
-  # 7. Fix internal header relative paths for system installation
-  ebegin "Fixing include paths in headers"
-  sed -i 's|#include *"../|#include "./|g' Engine/include/Tempest/* || die "Failed to fix header include paths"
-  eend $?
-
+	# 8. Fix internal header relative paths
+	ebegin "Fixing include paths in headers"
+	sed -i 's|#include *"../|#include "./|g' Engine/include/Tempest/* || die "Failed to fix header include paths"
+	eend $?
 }
 
 src_configure() {
-  # Explicitly point CMake to global stb headers folder
-  local mycmakeargs=(
-    -DTEMPEST_BUILD_SHARED=ON
-    -DTEMPEST_BUILD_AUDIO=$(usex audio)
-    -DTEMPEST_BUILD_VULKAN=$(usex vulkan)
-    -DTEMPEST_BUILD_METAL=OFF
-    -DTEMPEST_BUILD_DIRECTX12=OFF
-    -DCMAKE_INCLUDE_PATH="${EPREFIX}/usr/include/stb"
-  )
-  cmake_src_configure
+	local mycmakeargs=(
+		-DTEMPEST_BUILD_SHARED=ON
+		-DTEMPEST_BUILD_AUDIO=$(usex audio)
+		-DTEMPEST_BUILD_VULKAN=$(usex vulkan)
+		-DTEMPEST_BUILD_METAL=OFF
+		-DTEMPEST_BUILD_DIRECTX12=OFF
+		-DCMAKE_INCLUDE_PATH="${EPREFIX}/usr/include/stb"
+	)
+	cmake_src_configure
 
-  if use test; then
-    local mycmakeargs=(
-      -DTEMPEST_BUILD_AUDIO=$(usex audio)
-      -DTEMPEST_BUILD_VULKAN=$(usex vulkan)
-      -DCMAKE_CXX_STANDARD=20
-      -DCMAKE_INCLUDE_PATH="${EPREFIX}/usr/include/stb"
-    )
-    BUILD_DIR="${WORKDIR}/${P}_build_tests" \
-	     CMAKE_USE_DIR="${S}/Tests/tests" \
-	     cmake_src_configure
-  fi
+	if use test; then
+		local mycmakeargs=(
+			-DTEMPEST_BUILD_AUDIO=$(usex audio)
+			-DTEMPEST_BUILD_VULKAN=$(usex vulkan)
+			-DCMAKE_CXX_STANDARD=20
+			-DCMAKE_INCLUDE_PATH="${EPREFIX}/usr/include/stb"
+		)
+		BUILD_DIR="${WORKDIR}/${P}_build_tests" \
+			CMAKE_USE_DIR="${S}/Tests/tests" \
+			cmake_src_configure
+	fi
 }
 
 src_compile() {
-  cmake_src_compile
-  if use test; then
-    BUILD_DIR="${WORKDIR}/${P}_build_tests" \
-	     cmake_src_compile
-  fi
+	cmake_src_compile
+	if use test; then
+		BUILD_DIR="${WORKDIR}/${P}_build_tests" \
+			cmake_src_compile
+	fi
+
+	# --- Consumer Linkage Test ---
+	# Verify that libTempest.so can be linked by a downstream consumer without 
+	# undefined reference errors. This catches missing PUBLIC dependencies.
+	ebegin "Testing libTempest.so consumer linkage"
+	cat << 'EOF' > "${T}/tempest_link_test.cpp"
+// Minimal dummy program to test static linkage against libTempest.so
+int main() { return 0; }
+EOF
+	
+	# Attempt to link a dummy executable against libTempest.so.
+	# If Vulkan (or other deps) are linked as PRIVATE, this will fail with 
+	# "undefined reference" errors, correctly failing the ebuild.
+	[[ -n ${CXX} ]] || CXX="g++"
+	${CXX} ${CXXFLAGS} ${LDFLAGS} -I"${S}/Engine/include" -L"${BUILD_DIR}" -lTempest -o "${T}/tempest_link_test" "${T}/tempest_link_test.cpp" || die "Linkage test failed: libTempest.so has unresolved dependencies (ensure Vulkan is linked as PUBLIC)"[[ -n ${CXX} ]] || CXX="g++"
+"${CXX}" ${CXXFLAGS} ${LDFLAGS} \
+    -I"${S}/Engine/include" \
+    -L"${BUILD_DIR}" \
+    -lTempest \
+    -o "${T}/tempest_link_test" "${T}/tempest_link_test.cpp" \
+    || die "Linkage test failed: libTempest.so has unresolved dependencies (ensure Vulkan is linked as PUBLIC)"
+	eend $?
 }
 
 src_install() {
-  # 1. Standard CMake installation (installs libraries and binaries)
-  cmake_src_install
+	cmake_src_install
 
-  # # 2. Install header wrappers (Engine/include/Tempest/*) into lowercase /usr/include/tempest
-  # insinto /usr/include/tempest
-  # doins -r Engine/include/Tempest/*
+	local temp_hdr="${T}/engine_headers"
+	mkdir -p "${temp_hdr}" || die
+	pushd Engine >/dev/null || die
+	local dir
+	for dir in *; do
+		if [[ -d "${dir}" && "${dir}" != "include" ]]; then
+			cp -r "${dir}" "${temp_hdr}/" || die
+		fi
+	done
+	popd >/dev/null || die
 
-  # 3. Prepare implementation headers
-  local temp_hdr="${T}/engine_headers"
-  mkdir -p "${temp_hdr}" || die
+	find "${temp_hdr}" -type f ! -name "*.h" -delete || die
 
-  pushd Engine >/dev/null || die
-  local dir
-  for dir in *; do
-    if [[ -d "${dir}" && "${dir}" != "include" ]]; then
-      cp -r "${dir}" "${temp_hdr}/" || die
-    fi
-  done
-  popd >/dev/null || die
-
-  # Remove non-header files
-  find "${temp_hdr}" -type f ! -name "*.h" -delete || die
-
-  # 4. Install implementation headers alongside wrapper headers
-  insinto /usr/include/Tempest
-  doins -r "${temp_hdr}"/*
-
+	insinto /usr/include/Tempest
+	doins -r "${temp_hdr}"/*
 }
 
 src_test() {
-  BUILD_DIR="${WORKDIR}/${P}_build_tests" \
-	   virtx cmake_src_test
+	BUILD_DIR="${WORKDIR}/${P}_build_tests" \
+		virtx cmake_src_test
 }
