@@ -98,13 +98,22 @@ src_configure() {
 }
 
 src_install() {
-	cmake_src_install
+    cmake_src_install
 
-	# Match debian/rules behavior: install binary to /usr/games/Gothic2Notr
-	if [[ -f "${ED}/usr/bin/Gothic2Notr" ]]; then
-		dodir /usr/games
-		mv "${ED}/usr/bin/Gothic2Notr" "${ED}/usr/games/Gothic2Notr" || die
-	fi
+    # Ensure /usr/games exists and move/install the binary there if CMake put it in /usr/bin
+    if [[ -f "${ED}/usr/bin/Gothic2Notr" ]]; then
+        dodir /usr/games
+        mv "${ED}/usr/bin/Gothic2Notr" "${ED}/usr/games/Gothic2Notr" || die
+    fi
 
-	dodoc README.md CONTRIBUTING.md
+    # Install the unmodified Gothic2Notr.sh script right next to the binary in /usr/games
+    if [[ -f "${S}/scripts/Gothic2Notr.sh" ]]; then
+        exeinto /usr/games
+        doexe "${S}/scripts/Gothic2Notr.sh"
+    fi
+
+    # Optional: Create a symlink in /usr/bin so users can run 'Gothic2Notr' directly from PATH
+    dosym ../games/Gothic2Notr.sh /usr/bin/Gothic2Notr
+		
+    dodoc README.md CONTRIBUTING.md
 }

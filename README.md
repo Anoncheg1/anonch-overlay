@@ -15,6 +15,16 @@
 Removed
 - sci-libs/caffe2-2.4.0-r2  - disable sci-libs/kineto, +numpy -> numpy
 
+# OpenGothic
+Install binary and script to `/usr/games/Gothic2Notr` and `/usr/games/Gothic2Notr.sh` with `Gothic2Notr` in `/usr/bin` pointing to `Gothic2Notr.sh`.
+
+To run game use: `/usr/games/Gothic2Notr.sh -g "~/Gothic-II"`
+
+If you have GOG.com exe installer, you may extract it with help of `app-arch/innoextract`.
+```sh
+innoextract --exclude-temp --gog -d "~/Gothic-II" ./setup_gothic_2_gold_2.7_(14553).exe
+```
+
 # Donate
 - BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
 
