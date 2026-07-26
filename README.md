@@ -46,7 +46,7 @@ Tempest is installed as a shared library instead of being built as a single one,
 
 Tempest has a very unusual folder containing header files that act as proxies, which is why we use some strange logic to remove all except `.h` files.
 
-    # Donate
+# Donate
 - BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
 
 ![](https://raw.githubusercontent.com/Anoncheg1/public-share/refs/heads/main/BTC-1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25.png)
