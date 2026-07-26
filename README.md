@@ -16,7 +16,9 @@ Removed
 - sci-libs/caffe2-2.4.0-r2  - disable sci-libs/kineto, +numpy -> numpy
 
 # OpenGothic
-Install binary and script to `/usr/games/Gothic2Notr` and `/usr/games/Gothic2Notr.sh` with `Gothic2Notr` in `/usr/bin` pointing to `Gothic2Notr.sh`.
+[https://github.com/Try/OpenGothic]
+
+Install binary and script to `/usr/games/Gothic2Notr` and `/usr/games/Gothic2Notr.sh` with softlink `/usr/bin/Gothic2Notr -> ../games/Gothic2Notr.sh`.
 
 To run game use: `/usr/games/Gothic2Notr.sh -g "~/Gothic-II"`
 
