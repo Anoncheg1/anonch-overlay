@@ -37,7 +37,16 @@ Try additional graphic enhancements: `-rt 1 -aa 2 -ms 1 -gi 1`
 
 You may try to optimize game with GCC flags, see [GentooWiki:Per-package_environment_variables](https://wiki.gentoo.org/wiki/Handbook:AMD64/Portage/Advanced#Per-package_environment_variables)
 
-# Donate
+## Note on Ebuild
+In Tempest, I was able to use system libraries (libpng, libsquish, zlib) as replacements for the source libraries. However, for Squish, the built-in header files are still used.
+
+For OpenAL, it is not possible to use the `media-libs/openal` library because it relies on the rare option `-DAL_ALEXT_PROTOTYPES`.
+
+Tempest is installed as a shared library instead of being built as a single one, due to its complexity, which requires a separate Ebuild file.
+
+Tempest has a very unusual folder containing header files that act as proxies, which is why we use some strange logic to remove all except `.h` files.
+
+    # Donate
 - BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
 
 ![](https://raw.githubusercontent.com/Anoncheg1/public-share/refs/heads/main/BTC-1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25.png)
