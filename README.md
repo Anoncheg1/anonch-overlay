@@ -29,11 +29,12 @@ innoextract --exclude-temp --gog -d "~/Gothic-II" ./setup_gothic_2_gold_2.7_(145
 
 OpenGothic stores save files in its working directory (the folder containing the game executable) - `save_slot_1.sav, save_slot_2.sav`.
 
-To set FPS limit, add to `~/Gothic-I/Gothic.ini`or `~/Gothic-II/app/__support/app/System/Gothic.ini`
+To set FPS limit, add to `Gothic.ini` in current directory following lines:
 ```conf
 [ENGINE]
 zMaxFPS=60
 ```
+Gothic2 have `~/Gothic-II/app/__support/app/System/Gothic.ini` that should be copied to current directory.
 
 Try additional graphic enhancements: `-rt 1 -aa 2 -ms 1 -gi 1`
 
