@@ -1,4 +1,4 @@
-# Copyright 2026 Gentoo Authors
+# Copyright 2026 Anoncheg
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -91,9 +91,9 @@ src_configure() {
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo
 		-DBUILD_SHARED_LIBS=OFF
 	)
-	# Fix for: collect2: error: ld: /usr/lib64/libsquish.so.1.15.1.4: error adding symbols: DSO missing from command line 
+	# Fix for: collect2: error: ld: /usr/lib64/libsquish.so.1.15.1.4: error adding symbols: DSO missing from command line
 	# append-ldflags -lsquish
-	
+
 	cmake_src_configure
 }
 
@@ -114,6 +114,6 @@ src_install() {
 
     # Optional: Create a symlink in /usr/bin so users can run 'Gothic2Notr' directly from PATH
     dosym ../games/Gothic2Notr.sh /usr/bin/Gothic2Notr
-		
+
     dodoc README.md CONTRIBUTING.md
 }

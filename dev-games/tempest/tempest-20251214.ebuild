@@ -76,13 +76,14 @@ src_prepare() {
 	# sed -i '/target_compile_options(OpenAL PRIVATE/d' Engine/CMakeLists.txt || die
 
 	# 6. Neutralize bundled thirdparty subdirectories
-	: > Engine/thirdparty/zlib/CMakeLists.txt || die
-	: > Engine/thirdparty/libpng/CMakeLists.txt || die
-	: > Engine/thirdparty/squish/CMakeLists.txt || die
-	# if use audio; then
-	# 	: > Engine/thirdparty/openal-soft/CMakeLists.txt || die
-	# fi
-
+	# : > Engine/thirdparty/zlib/CMakeLists.txt || die
+	# : > Engine/thirdparty/libpng/CMakeLists.txt || die
+	: > Engine/thirdparty/squish/CMakeLists.txt || die # directly used with include
+	rm -rf Engine/thirdparty/zlib || die
+	rm -rf Engine/thirdparty/libpng || die
+ 	sed -i '/thirdparty.zlib/d' Engine/CMakeLists.txt || die
+	sed -i '/thirdparty.libpng/d' Engine/CMakeLists.txt || die 
+	
 	# 7. Inject target mappings early using system dependencies
 	cat << 'EOF' > "${T}/early_mappings.cmake"
 find_package(ZLIB REQUIRED)
@@ -114,6 +115,7 @@ src_configure() {
 		-DTEMPEST_BUILD_AUDIO=$(usex audio)
 		-DTEMPEST_BUILD_VULKAN=$(usex vulkan)
 		-DTEMPEST_BUILD_METAL=OFF
+		-DCMAKE_CXX_STANDARD=20
 		-DTEMPEST_BUILD_DIRECTX12=OFF
 		-DCMAKE_INCLUDE_PATH="${EPREFIX}/usr/include/stb"
 	)
@@ -146,6 +148,7 @@ src_install() {
 	local temp_hdr="${T}/engine_headers"
 	mkdir -p "${temp_hdr}" || die
 	pushd Engine >/dev/null || die
+	rm -rf Engine/thirdparty/squish
 	local dir
 	for dir in *; do
 		if [[ -d "${dir}" && "${dir}" != "include" ]]; then

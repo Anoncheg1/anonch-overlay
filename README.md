@@ -25,6 +25,18 @@ If you have GOG.com exe installer, you may extract it with help of `app-arch/inn
 innoextract --exclude-temp --gog -d "~/Gothic-II" ./setup_gothic_2_gold_2.7_(14553).exe
 ```
 
+OpenGothic stores save files in its working directory (the folder containing the game executable) - `save_slot_1.sav, save_slot_2.sav`.
+
+To set FPS limit, add to `~/Gothic-II/Gothic.ini`
+```conf
+[ENGINE]
+zMaxFPS=60
+```
+
+Try additional graphic enhancements: `-rt 1 -aa 2 -ms 1 -gi 1`
+
+You may try to optimize game with GCC flags, see [GentooWiki:Per-package_environment_variables](https://wiki.gentoo.org/wiki/Handbook:AMD64/Portage/Advanced#Per-package_environment_variables)
+
 # Donate
 - BTC (Bitcoin) address: 1CcDWSQ2vgqv5LxZuWaHGW52B9fkT5io25
 
