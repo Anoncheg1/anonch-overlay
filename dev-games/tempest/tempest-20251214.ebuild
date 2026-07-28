@@ -20,8 +20,8 @@ IUSE="audio test vulkan"
 # Was not tested: FEATURES=test USE=test emerge tempest
 RESTRICT="mirror bindist !test? ( test )"
 REQUIRED_USE="test? ( vulkan )"
-# audio? ( =media-libs/openal-1.25.2 )
 
+# audio? ( =media-libs/openal-1.25.2 ) - not used because  openal require rare flag: -DAL_ALEXT_PROTOTYPES
 DEPEND="
 	dev-libs/stb
 	media-libs/libpng:0=
@@ -30,9 +30,9 @@ DEPEND="
 	x11-libs/libX11
 	x11-libs/libXcursor
 	vulkan? (
-           >=media-libs/vulkan-loader-1.4.304.0[X]
-           >=dev-util/vulkan-headers-1.4.304.0
-)
+		>=media-libs/vulkan-loader-1.4.304.0[X]
+		>=dev-util/vulkan-headers-1.4.304.0
+	)
 "
 RDEPEND="${DEPEND}"
 BDEPEND="
@@ -81,9 +81,9 @@ src_prepare() {
 	: > Engine/thirdparty/squish/CMakeLists.txt || die # directly used with include
 	rm -rf Engine/thirdparty/zlib || die
 	rm -rf Engine/thirdparty/libpng || die
- 	sed -i '/thirdparty.zlib/d' Engine/CMakeLists.txt || die
-	sed -i '/thirdparty.libpng/d' Engine/CMakeLists.txt || die 
-	
+	sed -i '/thirdparty.zlib/d' Engine/CMakeLists.txt || die
+	sed -i '/thirdparty.libpng/d' Engine/CMakeLists.txt || die
+
 	# 7. Inject target mappings early using system dependencies
 	cat << 'EOF' > "${T}/early_mappings.cmake"
 find_package(ZLIB REQUIRED)
