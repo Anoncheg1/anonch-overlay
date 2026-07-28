@@ -29,11 +29,11 @@ DEPEND="
 src_prepare() {
 	cmake_src_prepare
 
-	# 1. Neutralize vendor/CMakeLists.txt to use system dependencies
+	# 1. Neutralize vendor/CMakeLists.txt to properly use system dependencies
 	cat << 'EOF' > vendor/CMakeLists.txt
-# Handled by Gentoo Portage
+# Handled by Gentoo Portage: Force system dependencies
+find_package(glm REQUIRED)
 
-# Find squish library
 find_library(SQUISH_LIBRARY NAMES squish PATHS "${EPREFIX}/usr/lib64" "${EPREFIX}/usr/lib")
 if(NOT SQUISH_LIBRARY)
     message(FATAL_ERROR "Could not find squish library")
@@ -41,27 +41,38 @@ endif()
 
 if(NOT TARGET squish)
     add_library(squish UNKNOWN IMPORTED)
-    set_target_properties(squish PROPERTIES IMPORTED_LOCATION "${SQUISH_LIBRARY}")
+    set_target_properties(squish PROPERTIES 
+        IMPORTED_LOCATION "${SQUISH_LIBRARY}"
+    )
+endif()
+
+# Provide compatibility alias for upstream hardcoded target names
+if(TARGET glm::glm AND NOT TARGET glm::glm_static)
+    add_library(glm::glm_static ALIAS glm::glm)
 endif()
 EOF
 
-	# 2. Add find_package calls and create doctest_with_main BEFORE add_subdirectory(vendor)
-	sed -i '/add_subdirectory(vendor)/i\find_package(glm REQUIRED)\nif(ZK_BUILD_TESTS)\n    find_package(doctest REQUIRED)\n    \n    # Create doctest_with_main library with implementation\n    if(NOT TARGET doctest_with_main)\n        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/doctest_main.cc" "#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN\\n#include <doctest/doctest.h>")\n        add_library(doctest_with_main STATIC "${CMAKE_CURRENT_BINARY_DIR}/doctest_main.cc")\n        target_link_libraries(doctest_with_main PUBLIC doctest::doctest)\n    endif()\nendif()' CMakeLists.txt || die
+	# 2. Provide a standard doctest main file statically
+	cat << 'EOF' > tests/doctest_main.cc
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+EOF
 
-	# 3. Patch root CMakeLists.txt to include doctest's CMake helper script
-	sed -i -e 's|include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)|include("${EPREFIX}/usr/share/doctest/cmake/doctest.cmake" OPTIONAL)\ninclude("${EPREFIX}/usr/lib64/cmake/doctest/doctest.cmake" OPTIONAL)\ninclude("${EPREFIX}/usr/lib/cmake/doctest/doctest.cmake" OPTIONAL)|g' CMakeLists.txt || die
+	# 3. Patch CMakeLists.txt to use system doctest
+	sed -i \
+		-e 's|include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)|find_package(doctest REQUIRED)\n    include("${doctest_DIR}/doctest.cmake")|g' \
+		-e 's|add_executable(test-zenkit ${_ZK_TESTS})|add_executable(test-zenkit ${_ZK_TESTS} tests/doctest_main.cc)|g' \
+		-e 's|target_link_libraries(test-zenkit PRIVATE zenkit doctest_with_main)|target_link_libraries(test-zenkit PRIVATE zenkit doctest::doctest)|g' \
+		CMakeLists.txt || die
 
-	# 4. "HARSH" FIX: Replace ALL occurrences of glm::glm_static with glm::glm
-	sed -i 's/glm::glm_static/glm::glm/g' CMakeLists.txt || die
-
-	# 5. Remove the glm installation loop
+	# 4. Remove the glm installation loop (upstream bug)
 	sed -i -E -e '/foreach[[:space:]]*\(lib glm::glm\)/,/endforeach[[:space:]]*\(\)/d' CMakeLists.txt || die
 
-	# 6. "HARSH" FIX: Add squish include path directly to compiler flags
-	append-cxxflags "-I${EPREFIX}/usr/include/squish"
-
-	# 7. Fix missing include/phoenix directory in install targets (upstream renamed to zenkit)
+	# 5. Fix missing include/phoenix directory in install targets
 	sed -i '\|install(DIRECTORY "include/phoenix" TYPE INCLUDE)|d' CMakeLists.txt || die
+
+	# 6. Add squish include path (Gentoo installs headers in /usr/include/squish/)
+	append-cxxflags "-I${EPREFIX}/usr/include/squish"
 }
 src_configure() {
 	local mycmakeargs=(
