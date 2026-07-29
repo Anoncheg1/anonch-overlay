@@ -13,7 +13,13 @@ SLOT="0"
 RESTRICT="mirror bindist"
 
 MY_COMMIT="abf079ead8edf1c4c4a9bad11508680fdb94d7ae"
-
+# OpenGothic: Dec 23, 2025
+# ZenKit: 0e3b3f6  Dec 20, 2025 zenkit-20251220
+# 0e3b3f67d203feb6de1888977a7c850acf7d0731
+# Tempest: Dec 14, 2025
+# 580c76c  https://github.com/Try/Tempest/commit/58477f3eb9a2208dad9f3dae31b98a4b75fcff29
+# Bullet3: Oct 22, 2025
+# https://github.com/bulletphysics/bullet3/commit/63c4d67e337017f9d8b298c900e9aabdb69296e7
 SRC_URI="
 	https://github.com/Try/OpenGothic/archive/${MY_COMMIT}.tar.gz -> ${P}.tar.gz
 	https://github.com/schellingb/TinySoundFont/archive/853a0a171759f1ddba0de1442133a75912bbeffa.tar.gz -> ${PN}-TinySoundFont-853a0a171759f1ddba0de1442133a75912bbeffa.tar.gz
@@ -34,7 +40,8 @@ DEPEND="
 	x11-libs/libX11
 	x11-libs/libXcursor
 "
-
+# media-libs/libglvnd provides GL/EGL dispatch for both Nvidia proprietary and
+# Mesa (AMD/Intel/opensource) drivers.
 RDEPEND="${DEPEND}
 	media-libs/libglvnd
 "
