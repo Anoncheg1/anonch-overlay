@@ -105,7 +105,7 @@ EOF
 
 	# 8. Fix internal header relative paths
 	ebegin "Fixing include paths in headers"
-	sed -i 's|#include *"../|#include "./|g' Engine/include/Tempest/* || die "Failed to fix header include paths"
+	       sed -i 's|#include *"../|#include "./|g' Engine/include/Tempest/* || die "Failed to fix header include paths"
 	eend $?
 }
 
