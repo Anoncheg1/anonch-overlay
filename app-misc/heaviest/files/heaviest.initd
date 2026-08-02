@@ -1,7 +1,14 @@
 #!/sbin/openrc-run
-# Copyright 1999-2025 Gentoo Authors
-# Distributed under the terms of the GNU General Public License v2
+# Copyright 2025-2026 Anoncheg1
+# Distributed under the terms of the GNU Affero General Public License v3.0 (AGPL-3.0)
 
 command=/usr/bin/heaviest-cpu-daemon
 command_background="true"
 pidfile="/run/heaviest.pid"
+output_log="/var/log/heaviest.log"
+error_log="/var/log/heaviest-error.log"
+
+depend() {
+    need localmount
+    after bootmisc
+}

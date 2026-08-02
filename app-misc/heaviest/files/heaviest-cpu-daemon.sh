@@ -1,40 +1,54 @@
 #!/bin/bash
 
-# Directory to store log files
-LOG_DIR="/tmp/top_procs"
-# How many history files to keep (e.g. 10 or 30)
-MAX_FILES=30 # Keep 30 files, so top_procs_01 to top_procs_30
+# Copyright 2025-2026 Anoncheg1
+# Distributed under the terms of the GNU Affero General Public License v3.0 (AGPL-3.0)
 
-# Make sure the log directory exists
+# --- Configuration ---
+LOG_DIR="/tmp/top_procs"
+MAX_FILES=30 # Number of historical snapshots to keep
+
+# for Gentoo daemon:
+cleanup() {
+    echo "Shutting down heaviest-cpu-daemon..."
+    exit 0
+}
+
+trap cleanup SIGTERM SIGINT
+
+
+# Ensure the directory exists; -p prevents errors if it already exists
 mkdir -p "$LOG_DIR"
 
-# Clear it only at the start
+# Clean up any leftover files from previous runs to ensure a fresh start
 rm -f "$LOG_DIR"/top_procs_* &>/dev/null
 
 while true; do
-    # 1. Rotate files: Shift all existing files up by one number
-    # This loop starts from MAX_FILES down to 1.
-    # It ensures top_procs_30 (if MAX_FILES=30) is removed/overwritten
-    # by top_procs_29, and top_procs_02 gets top_procs_01's content.
-    for (( n=MAX_FILES; n>=1; n-- )); do
-        old_file="$LOG_DIR/top_procs_$(printf "%02d" $n)"
-        new_file="$LOG_DIR/top_procs_$(printf "%02d" $((n+1)))" # This will be MAX_FILES+1 for n=MAX_FILES
+    # --- Step 1: File Rotation ---
+    # We iterate backward (from MAX_FILES-1 down to 1) to avoid overwriting
+    # a file before we've had a chance to move it.
+    # Example: Move 29->30, then 28->29, etc.
+    for (( n=MAX_FILES-1; n>=1; n-- )); do
+        # Use printf to ensure consistent 2-digit formatting (e.g., 01, 02)
+        src=$(printf "%02d" "$n")
+        dst=$(printf "%02d" "$((n+1))")
 
-        # If we are at the MAX_FILES position, just delete the file.
-        # Otherwise, move the file to the next number.
-        if [ "$n" -eq "$MAX_FILES" ]; then
-            rm -f "$old_file"
-        else
-            # Move the previous file to the current number's position
-            if [ -f "$old_file" ]; then
-                mv "$old_file" "$new_file"
-            fi
-        fi
+        # Only attempt to move if the source file actually exists
+        [ -f "$LOG_DIR/top_procs_$src" ] && mv "$LOG_DIR/top_procs_$src" "$LOG_DIR/top_procs_$dst"
     done
 
-    # 2. Write new top processes to top_procs_01
-    top -bn1 -c -o +%CPU -w 512 | head -n $((MAX_FILES + 8)) | tail -n +8 | awk '{if ($9 > 0.0) print}' | grep -v -e "heaviest-cpu-daemon" -e "top -bn1 -c -o +%CPU -w 512" > "$LOG_DIR/top_procs_01"
+    # --- Step 2: Data Collection ---
+    # top -bn1: Batch mode, 1 iteration (non-interactive)
+    # -c: Show full command path
+    # -o +%CPU: Sort by CPU usage descending
 
-    # 3. Wait before repeating
+    # awk 'NR>7': Skips the first 7 lines of 'top' output (headers/summary).
+    # $9>0.0: Filters out processes using 0% CPU to save space.
+    # !/heaviest.../: Excludes our own daemon to prevent feedback loops.
+    # {print $9, $12}: Extracts ONLY the %CPU column and the COMMAND column.
+    # This reduces disk I/O significantly compared to saving the whole line.
+    # top -bn1 -c -o +%CPU | awk 'NR>7 && $9>0.0 && !/heaviest-cpu-daemon/ && !/top -bn1/ {print $9, $12}' > "$LOG_DIR/top_procs_01"
+    top -bn1 -c -o +%CPU -w 512 | awk 'NR>7 && $9>0.0 && !/heaviest-cpu-daemon/ && !/top -bn1/ {cmd=$12; sub(/.*\//, "", cmd); print $9, cmd, $13}' > "$LOG_DIR/top_procs_01"
+
+    # --- Step 3: Interval ---
     sleep 2
 done
