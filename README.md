@@ -28,6 +28,14 @@ If any problems with audio it just freeze.
 
 It have bugs for playing video movies in game it is with visible artefacts.
 
+
+To increase resolution set in f1_res.ini:
+```
+SCALE_2X=1
+SCR_WIDTH=1920
+SCR_HEIGHT=1200
+```
+
 ![Fallout1_Interplay_cover](https://upload.wikimedia.org/wikipedia/en/a/af/Fallout.jpg)
 ![Fallout1_Interplay_gameplay](https://web.archive.org/web/19970609050502if_/http://www.interplay.com:80/fallout/images/gfall19.gif)
 
