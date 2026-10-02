@@ -28,6 +28,10 @@ If any problems with audio it just freeze.
 
 It have bugs for playing video movies in game it is with visible artefacts.
 
+![Fallout1_Interplay_cover](https://upload.wikimedia.org/wikipedia/en/a/af/Fallout.jpg)
+![Fallout1_Interplay_gameplay](https://web.archive.org/web/19970609050502if_/http://www.interplay.com:80/fallout/images/gfall19.gif)
+
+
 # Gothic 1 and 2 in games-engines/opengothic
 [https://github.com/Try/OpenGothic]
 
