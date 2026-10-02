@@ -9,13 +9,26 @@
 - app-misc/keyd - remapping keys in X11 and Wayland per applications and global.
 - app-text/opendetex - removing TeX and LaTeX
 - Telega - Unoffical Telegram client. Include:  net-libs/tdlib, app-emacs/rainbow-identifiers, app-emacs/visual-fill-column
-- OpenGothic 2025 v1.0.3549: dev-games/zenkit, dev-games/tempest, games-engines/opengothic
-
+- OpenGothic - 2025 v1.0.3549: dev-games/zenkit, dev-games/tempest, games-engines/opengothic
+- Fallout - games-engines/fallout1-ce from `Github - alexbatalov/fallout1-ce`. For Fallout 1 game of Interplay.
 
 Removed
 - sci-libs/caffe2-2.4.0-r2  - disable sci-libs/kineto, +numpy -> numpy
 
-# OpenGothic
+# Fallout in games-engines/fallout1-ce
+To run:
+```sh
+innoextract --exclude-temp --gog -d ./Fallout setup_fallout_2.1.0.18.exe
+cd Fallout/app
+fallout-ce
+```
+It exists silently with return code 1 if data files of Fallout 1 game was not found in current directory.
+
+If any problems with audio it just freeze.
+
+It have bugs for playing video movies in game it is with visible artefacts.
+
+# Gothic 1 and 2 in games-engines/opengothic
 [https://github.com/Try/OpenGothic]
 
 Install binary and script to `/usr/games/Gothic2Notr` and `/usr/games/Gothic2Notr.sh` with softlink `/usr/bin/Gothic2Notr -> ../games/Gothic2Notr.sh`.
