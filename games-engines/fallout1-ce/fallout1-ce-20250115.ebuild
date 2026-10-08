@@ -34,6 +34,7 @@ IUSE=""
 
 RDEPEND="
 	media-libs/libsdl2
+	media-libs/sdl2-mixer
 "
 DEPEND="${RDEPEND}"
 BDEPEND="

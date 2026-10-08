@@ -17,7 +17,7 @@ HOMEPAGE="https://gemrb.org/"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS=""
+KEYWORDS="~amd64"
 
 # IUSE -- each flag is verified to control an existing CMake option or a
 # legitimate Gentoo-side concern:
