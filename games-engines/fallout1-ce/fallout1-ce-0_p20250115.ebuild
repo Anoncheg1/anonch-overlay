@@ -41,6 +41,10 @@ BDEPEND="
 	dev-build/cmake
 "
 
+PATCHES=(
+    "${FILESDIR}"/${P}-fix-movies.patch
+)
+
 src_unpack() {
 	default
 
